@@ -7,7 +7,7 @@
     let messages = [
         {
             type: 'system',
-            content: 'Welcome to Bonker AI. Ask me anything about your finances.'
+            content: ' Ask me anything about your finances.'
         }
     ];
     
@@ -75,7 +75,7 @@
     function startNewChat() {
         messages = [{
             type: 'system',
-            content: 'Welcome to Bonker AI. Ask me anything about your finances.'
+            content: 'Welcome to FINN. Ask me anything about your finances.'
         }];
         chatHistory = chatHistory.map(chat => ({ ...chat, active: false }));
         chatHistory = [{ 

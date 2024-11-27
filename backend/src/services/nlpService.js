@@ -1,19 +1,27 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const schemaService = require('./schemaService');
+const cachedSchemaService = require('./cachedSchemaService');
 
 class NLPService {
     constructor() {
         if (!process.env.GEMINI_API_KEY) {
             throw new Error('GEMINI_API_KEY is required');
         }
-        console.log('API Key length:', process.env.GEMINI_API_KEY.length);
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         this.model = genAI.getGenerativeModel({ model: "gemini-pro" });
     }
 
     async processQuery(query, userId) {
-        const schemas = await schemaService.getAllSchemas();
-        const schemaPrompt = this.formatSchemaForPrompt(schemas);
+        // Get cached schemas
+        const allSchemas = await cachedSchemaService.getSchemas();
+        
+        // Get relevant tables for this query
+        const relevantTables = cachedSchemaService.getRelevantTables(query);
+        
+        // Filter schema to only include relevant tables and essential information
+        const filteredSchemas = cachedSchemaService.filterSchemaForPrompt(allSchemas, relevantTables);
+        
+        // Format the filtered schema for the prompt
+        const schemaPrompt = this.formatSchemaForPrompt(filteredSchemas);
 
         const prompt = `You are a financial analyst AI that converts natural language queries into PostgreSQL queries.
             
