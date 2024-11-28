@@ -7,39 +7,42 @@
     let messages = [
         {
             type: 'system',
-            content: ' Ask me anything about your finances.'
+            content: 'Ask me anything about your finances.'
         }
-    ];
-    
-    let chatHistory = [
-        { id: 1, title: 'Spending Analysis', date: 'Today', active: true },
-        { id: 2, title: 'Budget Review', date: 'Yesterday', active: false },
-        { id: 3, title: 'Investment Strategy', date: 'Oct 24', active: false },
-        { id: 4, title: 'Savings Goals', date: 'Oct 23', active: false },
     ];
     
     let inputMessage = '';
     let chatContainer;
     let isLoading = false;
+    let showSidebar = true;
+
+    const sampleQueries = [
+        "Show my total expenses by category this month",
+        "What's my income vs expenses ratio?",
+        "Show my highest spending categories",
+        "Calculate my monthly savings rate"
+    ];
+
+    function startNewChat() {
+        messages = [
+            {
+                type: 'system',
+                content: 'Ask me anything about your finances.'
+            }
+        ];
+    }
 
     async function handleSubmit() {
         if (!inputMessage.trim() || isLoading) return;
+        isLoading = true;
+
+        messages = [...messages, {
+            type: 'user',
+            content: inputMessage
+        }];
 
         try {
-            isLoading = true;
-            console.log('Submitting message:', inputMessage);
-
-            // Add user message
-            messages = [...messages, {
-                type: 'user',
-                content: inputMessage
-            }];
-
-            // Send to backend
             const response = await apiService.sendChatMessage(inputMessage);
-            console.log('Backend response:', response);
-
-            // Add AI response
             messages = [...messages, {
                 type: 'assistant',
                 content: response.explanation || 'Sorry, I could not process that request.',
@@ -49,15 +52,13 @@
                     results: response.results
                 } : null
             }];
-
-            inputMessage = '';
         } catch (error) {
-            console.error('Chat error:', error);
             messages = [...messages, {
                 type: 'system',
-                content: `Error: ${error.message || 'Something went wrong. Please try again.'}`
+                content: `Error: ${error.message || 'Something went wrong'}`
             }];
         } finally {
+            inputMessage = '';
             isLoading = false;
             scrollToBottom();
         }
@@ -71,155 +72,169 @@
             });
         }, 100);
     }
-
-    function startNewChat() {
-        messages = [{
-            type: 'system',
-            content: 'Welcome to FINN. Ask me anything about your finances.'
-        }];
-        chatHistory = chatHistory.map(chat => ({ ...chat, active: false }));
-        chatHistory = [{ 
-            id: Date.now(), 
-            title: 'New Chat', 
-            date: 'Just now', 
-            active: true 
-        }, ...chatHistory];
-    }
 </script>
 
-<div class="flex flex-col min-h-screen bg-black">
+<div class="min-h-screen bg-black flex flex-col">
     <Navbar />
-
-    <main class="flex-1 pt-20">
-        <div class="h-[calc(100vh-5rem)] flex">
-            <!-- Sidebar -->
-            <div class="w-80 border-r border-white/[0.05] backdrop-blur-xl bg-white/[0.02] p-4">
+    
+    <div class="flex-1 flex h-[calc(100vh-64px)] pt-16">
+        <!-- Sidebar -->
+        <aside class="w-80 border-r border-white/10 flex-shrink-0 {showSidebar ? '' : 'hidden'} bg-black/30">
+            <div class="h-full flex flex-col p-6">
                 <!-- New Chat Button -->
                 <button 
                     on:click={startNewChat}
-                    class="w-full bg-white hover:bg-white/90 text-black px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2 mb-6"
+                    class="w-full px-4 py-2.5 mb-8 rounded-lg bg-white/10 hover:bg-white/[0.15] text-white/90 text-sm font-medium transition-colors"
                 >
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <span>New Chat</span>
+                    New Chat
                 </button>
 
-                <!-- Chat History -->
-                <div class="space-y-2">
-                    <div class="text-white/40 text-sm px-2 mb-4">Chat History</div>
-                    {#each chatHistory as chat}
-                        <button 
-                            class="w-full text-left p-3 rounded-lg transition-colors {chat.active ? 'bg-white/10' : 'hover:bg-white/[0.05]'}"
-                        >
-                            <div class="flex items-start gap-3">
-                                <div class="w-8 h-8 rounded-lg bg-white/[0.05] flex items-center justify-center flex-shrink-0">
-                                    <span class="text-white/70">💬</span>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-white/90 text-sm truncate">{chat.title}</div>
-                                    <div class="text-white/40 text-xs">{chat.date}</div>
-                                </div>
-                            </div>
-                        </button>
-                    {/each}
-                </div>
-            </div>
-
-            <!-- Chat Area -->
-            <div class="flex-1 flex flex-col">
-                <!-- Messages Area -->
-                <div 
-                    bind:this={chatContainer}
-                    class="flex-1 overflow-y-auto p-6 messages-container"
-                >
-                    <div class="max-w-3xl mx-auto space-y-6">
-                        {#each messages as message, i (i)}
-                            <div 
-                                in:fly={{ y: 20, duration: 300 }}
-                                class="flex items-start gap-4"
+                <!-- Sample Queries -->
+                <div class="mb-8">
+                    <h3 class="text-xs text-white/40 font-medium uppercase tracking-wider mb-4 px-4">Sample Queries</h3>
+                    <div class="space-y-2.5">
+                        {#each sampleQueries as query}
+                            <button 
+                                on:click={() => inputMessage = query}
+                                class="w-full text-left px-4 py-2.5 rounded-lg text-white/60 text-sm hover:bg-white/[0.05] transition-colors"
                             >
-                                <!-- Avatar -->
-                                <div class="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.05] flex items-center justify-center flex-shrink-0">
-                                    {#if message.type === 'user'}
-                                        <span class="text-white/70">👤</span>
-                                    {:else if message.type === 'assistant'}
-                                        <span class="text-white/70">🤖</span>
-                                    {:else}
-                                        <span class="text-white/70">ℹ️</span>
-                                    {/if}
-                                </div>
-
-                                <!-- Message Content -->
-                                <div class="flex-1">
-                                    <div class="bg-white/[0.03] rounded-2xl rounded-tl-none p-4">
-                                        <p class="text-white/90 leading-relaxed">{message.content}</p>
-
-                                        {#if message.data?.type === 'results'}
-                                            <div class="mt-4 space-y-4">
-                                                <div class="bg-white/[0.02] rounded-lg p-4">
-                                                    <div class="text-white/40 text-sm mb-2">Generated SQL:</div>
-                                                    <code class="text-white/90 text-sm font-mono">{message.data.sql}</code>
-                                                </div>
-                                                
-                                                {#if message.data.results}
-                                                    <div class="bg-white/[0.02] rounded-lg p-4">
-                                                        <div class="text-white/40 text-sm mb-2">Results:</div>
-                                                        <pre class="text-white/90 text-sm overflow-x-auto">
-                                                            {JSON.stringify(message.data.results, null, 2)}
-                                                        </pre>
-                                                    </div>
-                                                {/if}
-                                            </div>
-                                        {/if}
-                                    </div>
-                                </div>
-                            </div>
+                                {query}
+                            </button>
                         {/each}
                     </div>
                 </div>
 
-                <!-- Input Area -->
-                <div class="border-t border-white/[0.05] backdrop-blur-xl bg-white/[0.02] p-4">
-                    <div class="max-w-3xl mx-auto">
-                        <form 
-                            on:submit|preventDefault={handleSubmit}
-                            class="flex items-center gap-4"
-                        >
-                            <input
-                                bind:value={inputMessage}
-                                type="text"
-                                placeholder="Ask about your finances..."
-                                class="flex-1 bg-white/[0.05] border border-white/[0.05] rounded-lg px-4 py-3 text-white/90 placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-white/10"
-                            />
-                            <button 
-                                type="submit"
-                                class="bg-white hover:bg-white/90 text-black px-6 py-3 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled={isLoading}
-                            >
-                                {#if isLoading}
-                                    <div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                                {:else}
-                                    <span>Send</span>
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/>
-                                    </svg>
-                                {/if}
-                            </button>
-                        </form>
+                <!-- Recent Chats -->
+                <div class="flex-1 overflow-y-auto">
+                    <h3 class="text-xs text-white/40 font-medium uppercase tracking-wider mb-4 px-4">Recent Chats</h3>
+                    <div class="space-y-2.5">
+                        <button class="w-full text-left px-4 py-2.5 rounded-lg text-white/60 text-sm hover:bg-white/[0.05] transition-colors">
+                            Monthly Analysis
+                        </button>
+                        <button class="w-full text-left px-4 py-2.5 rounded-lg text-white/60 text-sm hover:bg-white/[0.05] transition-colors">
+                            Expense Categories
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </aside>
+
+        <!-- Main Chat Area with adjusted positioning -->
+        <main class="flex-1 flex flex-col bg-black/30 relative">
+            <!-- Toggle Sidebar Button with adjusted top position -->
+            <button 
+                on:click={() => showSidebar = !showSidebar}
+                class="absolute left-4 top-6 p-2 rounded-lg hover:bg-white/[0.05] text-white/40 hover:text-white/60 transition-colors"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+
+            <!-- Chat Messages with adjusted top margin -->
+            <div 
+                bind:this={chatContainer}
+                class="flex-1 overflow-y-auto px-4 lg:px-8 py-6 space-y-6 mt-16"
+            >
+                {#each messages as message, i}
+                    <div 
+                        in:fly={{ y: 20, duration: 300, delay: i * 50 }}
+                        class="max-w-3xl mx-auto flex items-start gap-4 {message.type === 'user' ? 'justify-end' : ''}"
+                    >
+                        {#if message.type !== 'user'}
+                            <div class="w-2 h-2 rounded-full bg-white/20 mt-3"></div>
+                        {/if}
+                        
+                        <div class="max-w-[85%]">
+                            <div class="rounded-2xl p-4 {
+                                message.type === 'user' 
+                                    ? 'bg-white/10' 
+                                    : message.type === 'system'
+                                        ? 'bg-white/[0.02] border border-white/10'
+                                        : 'bg-white/[0.05]'
+                            }">
+                                <p class="text-white/90 text-sm leading-relaxed">{message.content}</p>
+
+                                {#if message.data?.type === 'results'}
+                                    <div class="mt-4 space-y-3">
+                                        <div class="bg-black/30 rounded p-3">
+                                            <div class="text-white/40 text-xs mb-2 uppercase tracking-wider">Query</div>
+                                            <code class="text-white/80 text-xs font-mono">{message.data.sql}</code>
+                                        </div>
+                                        
+                                        {#if message.data.results?.length}
+                                            <div class="bg-black/30 rounded p-3 overflow-x-auto">
+                                                <div class="text-white/40 text-xs mb-2 uppercase tracking-wider">Results</div>
+                                                <table class="w-full text-left">
+                                                    <thead>
+                                                        <tr>
+                                                            {#each Object.keys(message.data.results[0]) as header}
+                                                                <th class="p-2 text-white/40 text-xs uppercase">{header}</th>
+                                                            {/each}
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {#each message.data.results as row}
+                                                            <tr class="border-t border-white/[0.03]">
+                                                                {#each Object.values(row) as cell}
+                                                                    <td class="p-2 text-white/80 text-sm">{cell}</td>
+                                                                {/each}
+                                                            </tr>
+                                                        {/each}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        {/if}
+                                    </div>
+                                {/if}
+                            </div>
+                        </div>
+                    </div>
+                {/each}
+
+                {#if isLoading}
+                    <div class="max-w-3xl mx-auto flex items-center gap-2">
+                        <div class="w-1.5 h-1.5 rounded-full bg-white/40 animate-pulse"></div>
+                        <div class="w-1.5 h-1.5 rounded-full bg-white/40 animate-pulse delay-75"></div>
+                        <div class="w-1.5 h-1.5 rounded-full bg-white/40 animate-pulse delay-150"></div>
+                    </div>
+                {/if}
+            </div>
+
+            <!-- Input Area -->
+            <div class="border-t border-white/10 bg-black/40 backdrop-blur-xl p-4">
+                <div class="max-w-3xl mx-auto">
+                    <form 
+                        on:submit|preventDefault={handleSubmit}
+                        class="relative"
+                    >
+                        <input
+                            bind:value={inputMessage}
+                            type="text"
+                            placeholder="Ask about your finances..."
+                            class="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white/90 text-sm placeholder:text-white/20 focus:outline-none focus:border-white/20 transition-colors"
+                        />
+                        <button 
+                            type="submit"
+                            disabled={isLoading}
+                            class="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-white/90 disabled:opacity-50 transition-colors"
+                        >
+                            Send
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
 </div>
-<Footer />
+<Footer/>
 <style>
-    .messages-container::-webkit-scrollbar {
-        display: none;
-    }
-    .messages-container {
+    /* Hide scrollbar but maintain functionality */
+    :global(.no-scrollbar) {
         -ms-overflow-style: none;
         scrollbar-width: none;
+    }
+    :global(.no-scrollbar::-webkit-scrollbar) {
+        display: none;
     }
 </style> 
