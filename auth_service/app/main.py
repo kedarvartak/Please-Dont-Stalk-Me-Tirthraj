@@ -17,7 +17,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",  # SvelteKit dev server
         "http://localhost:4173",  # SvelteKit preview
-        "https://your-production-domain.com"  # Add your production domain
+        "https://your-production-domain.com"  # prodction cha domain
     ],
     allow_credentials=True,
     allow_methods=["*"],

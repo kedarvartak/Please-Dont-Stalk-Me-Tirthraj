@@ -1,26 +1,24 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 
 class Settings(BaseSettings):
     # MongoDB settings
     MONGODB_URL: str
-    DB_NAME: str = "auth_db"
+    DB_NAME: str = "authService"
     
     # JWT settings
     SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
-    # Optional: Add other settings as needed
-    ENVIRONMENT: str = "development"
-    APP_NAME: str = "Auth Service"
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True
+    )
 
 @lru_cache()
-def get_settings() -> Settings:
+def get_settings():
     return Settings()
 
 settings = get_settings()
