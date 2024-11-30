@@ -4,6 +4,7 @@
     import { fade } from 'svelte/transition';
     import { BASE_URL } from '$lib/config/api';
     import { goto } from '$app/navigation';
+    import { authStore } from '$lib/stores/authStore';
 
     let isLogin = true;
     let email = '';
@@ -44,8 +45,15 @@
                     if (data.user) {
                         localStorage.setItem('user', JSON.stringify(data.user));
                     }
+                    // Store user data
+                    localStorage.setItem('userEmail', email);
+                    authStore.set({
+                        isLoggedIn: true,
+                        userEmail: email,
+                        token: data.access_token
+                    });
                     // Redirect to dashboard/chat
-                    goto('/chat');
+                    goto('/');
                 } else {
                     // Registration successful
                     isLogin = true;

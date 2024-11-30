@@ -2,8 +2,18 @@
     import Navbar from '../components/Navbar.svelte';
     import Footer from '../components/Footer.svelte';
     import { fade, fly } from 'svelte/transition';
+    import { authStore } from '$lib/stores/authStore';
+    import { goto } from '$app/navigation';
 
     let heroVisible = true;
+
+    function handleGetStarted() {
+        if ($authStore.isLoggedIn) {
+            goto('/chat');
+        } else {
+            goto('/auth');
+        }
+    }
 </script>
 
 <Navbar />
@@ -29,12 +39,15 @@
                     </p>
 
                     <div class="flex flex-col sm:flex-row items-start gap-4 mb-16">
-                        <a href="/chat" class="w-full sm:w-auto group flex items-center gap-3 text-white border border-white/10 hover:border-white/20 backdrop-blur-sm bg-white/5 hover:bg-white/10  px-8 py-4 rounded-lg font-medium transition-all duration-200 shadow-lg shadow-white/20">
+                        <button 
+                            on:click={handleGetStarted}
+                            class="w-full sm:w-auto group flex items-center gap-3 text-white border border-white/10 hover:border-white/20 backdrop-blur-sm bg-white/5 hover:bg-white/10 px-8 py-4 rounded-lg font-medium transition-all duration-200 shadow-lg shadow-white/20"
+                        >
                             <span>Get Started</span>
                             <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                             </svg>
-                        </a>
+                        </button>
                     </div>
 
                     <!-- Trust Indicators -->
