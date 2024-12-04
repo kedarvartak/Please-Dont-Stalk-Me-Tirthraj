@@ -1,10 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from .schemas.auth import UserCreate, Token
+from .schemas.auth import UserCreate, Token, VerificationCode
 from .services.auth_service import AuthService
 from .database import get_database, connect_to_mongodb, close_mongodb_connection
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import EmailStr
 
 # This line is crucial - it creates the FastAPI application instance
 app = FastAPI()  # Make sure this line exists!
@@ -54,3 +55,18 @@ async def login(
 @app.get("/verify-token")
 async def verify_token(token: str = Depends(oauth2_scheme)):
     return {"email": token}
+
+@app.post("/verify-email")
+async def verify_email(
+    verification_data: VerificationCode,
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    return await AuthService.verify_email(db, verification_data)
+
+@app.post("/resend-verification")
+async def resend_verification(
+    email: EmailStr,
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    # Implementation similar to register but only for resending code
+    return await AuthService.resend_verification_code(db, email)

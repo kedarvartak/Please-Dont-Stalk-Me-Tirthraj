@@ -5,13 +5,13 @@ class UserCreate(BaseModel):
     username: str
     password: str
 
-class UserLogin(BaseModel):
+class VerificationCode(BaseModel):
     email: EmailStr
-    password: str
+    code: str
 
 class Token(BaseModel):
     access_token: str
-    token_type: str
+    token_type: str = "bearer"
 
 class TokenData(BaseModel):
     email: str | None = None
